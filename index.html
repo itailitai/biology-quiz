@@ -456,7 +456,7 @@
       }
 
       .final-screen h2 {
-        font-size: 2.5rem;
+        font-size: 4rem;
         margin-bottom: 1rem;
         background: linear-gradient(135deg, #f472b6, #60a5fa);
         -webkit-background-clip: text;
@@ -615,7 +615,9 @@
     <!-- Final Screen -->
     <div class="final-screen" id="final-screen">
       <h2 id="final-message">מנצחת!</h2>
-      <p id="final-scores">קבוצה א׳: 0 נקודות | קבוצה ב׳: 0 נקודות</p>
+      <p id="final-scores" style="font-weight: bold">
+        קבוצה א׳: 0 נקודות | קבוצה ב׳: 0 נקודות
+      </p>
       <button id="restart-btn" style="display: none">התחל מחדש</button>
     </div>
 
@@ -1152,18 +1154,18 @@
 
         // Define your custom classes with enhanced styling
         diagram += `
-%% === Classes (Styling) ===
-classDef kingdomStyle fill:#4F46E5,stroke:#4F46E5,color:#fff,stroke-width:2px;
-classDef phylumStyle fill:#6366F1,stroke:#6366F1,color:#fff,stroke-width:2px;
-classDef classStyle fill:#818CF8,stroke:#818CF8,color:#fff,stroke-width:2px;
-classDef orderStyle fill:#A5B4FC,stroke:#A5B4FC,color:#1E293B,stroke-width:2px;
-classDef familyStyle fill:#C7D2FE,stroke:#C7D2FE,color:#1E293B,stroke-width:2px;
-classDef genusStyle fill:#E0E7FF,stroke:#E0E7FF,color:#1E293B,stroke-width:2px;
-classDef speciesStyle fill:#FF6B6B,stroke:#FF6B6B,color:#1E293B,stroke-width:2px;
-classDef sharedStyle fill:#22C55E,stroke:#22C55E,color:#fff,stroke-width:3px;
-classDef mainAnimalStyle stroke:#121157,color:#fff,stroke-width:3px;
-classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:3px;
-`;
+      %% === Classes (Styling) ===
+      classDef kingdomStyle fill:#4F46E5,stroke:#4F46E5,color:#fff,stroke-width:2px;
+      classDef phylumStyle fill:#6366F1,stroke:#6366F1,color:#fff,stroke-width:2px;
+      classDef classStyle fill:#818CF8,stroke:#818CF8,color:#fff,stroke-width:2px;
+      classDef orderStyle fill:#A5B4FC,stroke:#A5B4FC,color:#1E293B,stroke-width:2px;
+      classDef familyStyle fill:#C7D2FE,stroke:#C7D2FE,color:#1E293B,stroke-width:2px;
+      classDef genusStyle fill:#E0E7FF,stroke:#E0E7FF,color:#1E293B,stroke-width:2px;
+      classDef speciesStyle fill:#FF6B6B,stroke:#FF6B6B,color:#1E293B,stroke-width:2px;
+      classDef sharedStyle fill:#22C55E,stroke:#22C55E,color:#fff,stroke-width:3px;
+      classDef mainAnimalStyle stroke:#121157,color:#fff,stroke-width:3px;
+      classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:3px;
+      `;
 
         const taxonomyLevels = [
           { key: "Kingdom", hebrew: "ממלכה", style: "kingdomStyle" },
@@ -1258,10 +1260,10 @@ classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:
           const optionElement = document.createElement("div");
           optionElement.className = "option";
           optionElement.innerHTML = `
-              <div class="team-label">קבוצה</div>
-              <img src="${option.image}" alt="${option.name}">
-              <h3>${option.name}</h3>
-            `;
+                    <div class="team-label">קבוצה</div>
+                    <img src="${option.image}" alt="${option.name}">
+                    <h3>${option.name}</h3>
+                  `;
           // Attach our modified select function
           optionElement.addEventListener("click", () => selectOption(index));
           optionsContainer.appendChild(optionElement);
@@ -1443,25 +1445,37 @@ classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:
         // Add thank-you paragraph
         const thankYouMessage = document.createElement("p");
         thankYouMessage.textContent = `
-        תודה רבה על השתתפותכם בחידון הטקסונומיה שלנו! החידון נועד להדגיש כי לעיתים קרובות, דמיון חיצוני בין בעלי חיים אינו מעיד על קרבה טקסונומית אמיתית. מטרתנו הייתה להעמיק את ההבנה שלכם ביחסים האבולוציוניים בין מינים שונים ולהמחיש שמראה חיצוני אינו בהכרח משקף את הקרבה הביולוגית. אנו מקווים שהחידון תרם להבנתכם של הסדר ההיררכי בטקסונומיה ואת חשיבות הסיווג המדעי המדויק. המשיכו לגלות וללמוד על המגוון העשיר והמרתק של עולם החי שסביבנו!
-`;
+              תודה שהשתתפתם בחידון הטקסונומיה שלנו! מטרתנו הייתה להמחיש שדמיון חיצוני לא תמיד מעיד על קרבה טקסונומית ולהעמיק את הבנת היחסים האבולוציוניים בין מינים ואת חשיבות הסיווג המדעי המדויק!`;
         thankYouMessage.style.marginTop = "1rem";
-        thankYouMessage.style.fontSize = "1.25rem";
+        thankYouMessage.style.fontSize = "1.4rem";
         thankYouMessage.style.textAlign = "center";
-        thankYouMessage.style.width = "80%";
+        thankYouMessage.style.width = "60%";
         thankYouMessage.style.color = "#94a3b8";
+        thankYouMessage.style.fontWeight = "bold";
         finalScreen.appendChild(thankYouMessage);
+
+        // Add creators names
+        const creatorsMessage = document.createElement("p");
+        creatorsMessage.textContent = `
+              איתי לייטנר, תמר מטס
+              `;
+        creatorsMessage.style.marginTop = "1rem";
+        creatorsMessage.style.fontSize = "1.25rem";
+        creatorsMessage.style.textAlign = "center";
+        creatorsMessage.style.width = "80%";
+        creatorsMessage.style.color = "#94a3b8";
+        finalScreen.appendChild(creatorsMessage);
 
         finalScreen.style.display = "flex";
 
         // Trigger confetti for 30 seconds
         const duration = 30 * 1000;
-        const confettiInterval = 500;
+        const confettiInterval = 50; // Smaller interval for a smoother, continuous effect
         const end = Date.now() + duration;
 
         const confettiLoop = setInterval(() => {
           confetti({
-            particleCount: 50,
+            particleCount: 5, // Smaller particle count for smoother effect
             angle: 60,
             spread: 100,
             origin: { x: 0 },
@@ -1469,7 +1483,7 @@ classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:
           });
 
           confetti({
-            particleCount: 50,
+            particleCount: 5, // Smaller particle count for smoother effect
             angle: 120,
             spread: 100,
             origin: { x: 1 },

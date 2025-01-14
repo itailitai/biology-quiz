@@ -5,6 +5,7 @@
     <title>חידון טקסונומיה</title>
     <!-- Include Confetti.js via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap");
 
@@ -249,12 +250,20 @@
       .explanation h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1.25rem;
+        text-align: center;
+        color: #f8fafc;
       }
 
-      .explanation p {
-        margin: 0;
-        font-size: 1rem;
-        color: #d1d5db;
+      #taxonomy-diagram {
+        padding: 2rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        overflow-x: auto;
+      }
+
+      .mermaid {
+        display: flex;
+        justify-content: center;
       }
 
       /* Final Screen Styles */
@@ -315,6 +324,66 @@
           box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
         }
       }
+
+      /* Modal Styles */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 2000; /* Above other content */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.9); /* Black with opacity */
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .modal-content {
+        position: relative;
+        background-color: #1e293b;
+        margin: auto;
+        padding: 1rem;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 1200px;
+        border-radius: 16px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        color: #f8fafc;
+        font-size: 35px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close-modal:hover,
+      .close-modal:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .open-modal-btn {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .open-modal-btn:hover {
+        background: #4338ca;
+      }
     </style>
   </head>
   <body>
@@ -334,8 +403,11 @@
 
         <!-- Explanation Section -->
         <div class="explanation" id="explanation-container">
-          <h3>הסבר:</h3>
-          <p id="explanation-text"></p>
+          <h3>השוואת סיווג טקסונומי</h3>
+          <div id="taxonomy-diagram"></div>
+          <button class="open-modal-btn" id="view-fullscreen-btn">
+            מסך מלא
+          </button>
         </div>
       </div>
 
@@ -364,119 +436,629 @@
       <button id="restart-btn">התחל מחדש</button>
     </div>
 
+    <!-- Full-Screen Modal for Taxonomy Diagram -->
+    <div id="diagram-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3 style="text-align: center; color: #f8fafc">טקסונומיה מלאה</h3>
+        <div id="fullscreen-taxonomy-diagram" style="margin-top: 1rem"></div>
+      </div>
+    </div>
+
     <script>
       const quizData = [
+        // 1) לווייתן כחול
         {
           mainAnimal: {
-            name: "לווייתן",
+            name: "לוייתן כחול",
             image: "images/whale.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "מכפילי פרסה", // כיום לווייתנים משויכים לסדרה זו (Cetacea כענף בתוך Artiodactyla)
+              Family: "לווייתני ענק",
+              Genus: "לויתן",
+              Species: "לויתן כחול",
+            },
           },
           options: [
-            { name: "כלב ים", image: "images/seal.jpg" },
-            { name: "ביזון", image: "images/bison.jpg", correct: true },
-            { name: "תחש נהרות", image: "images/manatee.jpg" },
+            {
+              name: "כלב ים מזוקן",
+              image: "images/seal.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים",
+                Family: "כלבי ים", // (Phocidae)
+                Genus: "כלב ים",
+                Species: "כלב ים מזוקן",
+              },
+            },
+            {
+              name: "ביזון",
+              image: "images/bison.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מכפילי פרסה",
+                Family: "פריים",
+                Genus: "ביזון",
+                Species: "ביזון אמריקאי",
+              },
+            },
+            {
+              name: "תחש נהרות",
+              image: "images/manatee.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "תחשאים", // Sirenia
+                Family: "תחשי הנהרות",
+                Genus: "תחש הנהרות",
+                Species: "תחש הנהרות הקריבי", // כדוגמת Trichechus manatus
+              },
+            },
           ],
           explanation:
             "הלווייתן קרוב יותר מבחינה אבולוציונית לביזון מאשר לכלב ים או תחש נהרות.",
         },
+
+        // 2) כלב הבית
         {
           mainAnimal: {
-            name: "שפן סלע",
-            image: "images/rockhyrax.jpg",
+            name: "כלב הבית",
+            image: "images/dog.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "טורפים", // (Hyracoidea)
+              Family: "כלביים", // (Procaviidae)
+              Genus: "כלב", // תרגום חופשי במקום Procavia
+              Species: "זאב מצוי",
+            },
           },
           options: [
-            { name: "פיל", image: "images/elephant.jpg", correct: true },
-            { name: "קפיברה", image: "images/capybara.jpg" },
-            { name: "ארנבת בר", image: "images/hare.jpg" },
+            {
+              name: "פנק (Fennec Fox)",
+              image: "images/fennec.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים", // (Proboscidea)
+                Family: "כלביים", // (Elephantidae)
+                Genus: "שועל", // תרגום/תעתיק של Loxodonta
+                Species: "פנק",
+              },
+            },
+            {
+              name: "צבוע",
+              image: "images/hyena.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים",
+                Family: "צבועיים", // (Hyaenidae)
+                Genus: "צבוע נקוד", // (Crocuta/Hyaena) – כאן פשוט "צבוע"
+                Species: "צבוע נקוד", // (Crocuta crocuta)
+              },
+            },
+            {
+              name: "זאב טסמני (נכחד)",
+              image: "images/thylacinus.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפי כיס", // (Lagomorpha)
+                Family: "זאבי כיס", // (Leporidae)
+                Genus: "זאב כיס",
+                Species: "זאב טסמני",
+              },
+            },
           ],
           explanation:
             "שפן סלע קרוב יותר מבחינה אבולוציונית לפיל מאשר לקפיברה או ארנבת בר.",
         },
+
+        // 3) דינוזאור
         {
           mainAnimal: {
-            name: "דינוזאור",
-            image: "images/dinosaur.jpg",
+            name: "חתול הבית",
+            image: "images/cat.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "טורפים", // (Carnivora)
+              Family: "חתוליים", // (Felidae)
+              Genus: "חתול", // (Felis)
+              Species: "חתול בר", // (Felis catus)
+            },
           },
           options: [
-            { name: "יונה", image: "images/pigeon.jpg", correct: true },
-            { name: "לטאת כוח", image: "images/monitorlizard.jpg" },
-            { name: "תנין", image: "images/crocodile.jpg" },
+            {
+              name: "זבד אפריקאי",
+              image: "images/civet.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים", // (Squamata)
+                Family: "גחניים", // (Varanidae)
+                Genus: "Civettictis", // (Varanus)
+                Species: "זבד אפריקני", // דוגמה כללית ללטאת כוח
+              },
+            },
+            {
+              name: "סרוואל",
+              correct: true,
+              image: "images/serval.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים", // (Squamata)
+                Family: "חתוליים", // (Varanidae)
+                Genus: "סרוואל", // (Varanus)
+                Species: "סרוואל", // דוגמה כללית ללטאת כוח
+              },
+            },
+            {
+              name: "פוסה",
+              image: "images/fossa.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים", // (Squamata)
+                Family: "טורפי מדגסקר", // (Varanidae)
+                Genus: "פוסה", // (Varanus)
+                Species: "פוסה", // דוגמה כללית ללטאת כוח
+              },
+            },
           ],
           explanation:
             "יונה קרובה יותר לדינוזאור מאשר לטאת כוח או תנין, הודות לקרבה אבולוציונית.",
         },
+
+        // 4) קרנף
         {
           mainAnimal: {
             name: "קרנף",
             image: "images/rhino.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "מפריטי פרסה", // (Perissodactyla)
+              Family: "קרנפיים", // (Rhinocerotidae)
+              Genus: "קרנף", // (Rhinoceros)
+              Species: "קרנף הודי", // (Rhinoceros unicornis)
+            },
           },
           options: [
-            { name: "פיל", image: "images/elephant.jpg" },
-            { name: "היפופוטם", image: "images/hippo.jpg" },
-            { name: "סוס", image: "images/horse.jpg", correct: true },
+            {
+              name: "פיל",
+              image: "images/elephant.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "חדקאים", // (Proboscidea)
+                Family: "פיליים", // (Elephantidae)
+                Genus: "פיל", // (Elephas)
+                Species: "פיל אסייתי", // (Elephas maximus)
+              },
+            },
+            {
+              name: "היפופוטם",
+              image: "images/hippo.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מכפילי פרסה", // (Artiodactyla)
+                Family: "היפופוטמיים", // (Hippopotamidae)
+                Genus: "היפופוטם", // (Hippopotamus)
+                Species: "היפופוטם מצוי", // (Hippopotamus amphibius)
+              },
+            },
+            {
+              name: "סוס",
+              image: "images/horse.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מפריטי פרסה", // (Perissodactyla)
+                Family: "סוסיים", // (Equidae)
+                Genus: "סוס", // (Equus)
+                Species: "סוס הבית", // (Equus ferus caballus)
+              },
+            },
           ],
           explanation:
             "סוס קרוב יותר לקרנף מאשר לפיל או להיפופוטם מבחינה אבולוציונית.",
         },
+
+        // 5) סלמנדרה
         {
           mainAnimal: {
             name: "סלמנדרה",
             image: "images/salamander.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "דו-חיים",
+              Order: "בעלי זנב", // (Caudata)
+              Family: "אמביסטומיים", // (Ambystomatidae)
+              Genus: "אמביסטומה", // (Ambystoma)
+              Species: "אמביסטומה מקסיקנית", // Axolotl כדוגמה
+            },
           },
           options: [
-            { name: "קרפדה", image: "images/toad.jpg", correct: true },
-            { name: "זיקית", image: "images/chameleon.jpg" },
-            { name: "שממית", image: "images/gecko.jpg" },
+            {
+              name: "קרפדה",
+              image: "images/toad.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "דו-חיים",
+                Order: "חסרי זנב", // (Anura)
+                Family: "קרפדיים", // (Bufonidae)
+                Genus: "קרפדה", // (Bufo)
+                Species: "קרפדה מצויה", // (Bufo bufo)
+              },
+            },
+            {
+              name: "זיקית",
+              image: "images/chameleon.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "זוחלים",
+                Order: "קשקשאים", // (Squamata)
+                Family: "זיקיתיים", // (Chamaeleonidae)
+                Genus: "זיקית",
+                Species: "זיקית צעיפה", // (Chamaeleo calyptratus)
+              },
+            },
+            {
+              name: "שממית",
+              image: "images/gecko.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "זוחלים",
+                Order: "קשקשאים",
+                Family: "שממיתיים", // (Gekkonidae)
+                Genus: "שממית",
+                Species: "שממית מצויה", // דוגמה כללית
+              },
+            },
           ],
           explanation:
-            "ג'ירפה קרובה יותר לאוקפי מאשר לשימפנזה או טפיר אסייתי, מכיוון ששניהם שייכים לאותה משפחה.",
+            "סלמנדרה קרובה יותר לקרפדה מאשר לזיקית או שממית מבחינה אבולוציונית.",
         },
+
+        // 6) אוקפי
         {
           mainAnimal: {
             name: "אוקפי",
             image: "images/okapi.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "מכפילי פרסה", // (Artiodactyla)
+              Family: "ג'ירפיים", // (Giraffidae)
+              Genus: "אוקפיה", // (Okapia)
+              Species: "אוקפיה ג'ונסטוני", // (Okapia johnstoni)
+            },
           },
           options: [
-            { name: "זברה", image: "images/zebra.jpg" },
-            { name: "ג'ירפה", image: "images/giraffe.jpg", correct: true },
-            { name: "טפיר אסייתי", image: "images/tapir.jpg" },
+            {
+              name: "זברה",
+              image: "images/zebra.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מפריטי פרסה", // (Perissodactyla)
+                Family: "סוסיים", // (Equidae)
+                Genus: "סוס", // (Equus)
+                Species: "זברה מצויה", // (Equus quagga)
+              },
+            },
+            {
+              name: "ג'ירפה",
+              image: "images/giraffe.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מכפילי פרסה",
+                Family: "ג'ירפיים",
+                Genus: "ג'ירפה",
+                Species: "ג'ירף מצוי", // (Giraffa camelopardalis)
+              },
+            },
+            {
+              name: "טפיר אסייתי",
+              image: "images/tapir.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מפריטי פרסה",
+                Family: "טפיריים", // (Tapiridae)
+                Genus: "טפיר", // (Tapirus)
+                Species: "טפיר אסייתי", // (Tapirus indicus)
+              },
+            },
           ],
           explanation:
-            "ג'ירפה קרובה יותר לאוקפי מאשר לשימפנזה או טפיר אסייתי, מכיוון ששניהם שייכים לאותה משפחה.",
+            "ג'ירפה קרובה יותר לאוקפי מאשר לזברה או טפיר אסייתי, מכיוון ששניהם שייכים למשפחת ג'ירפיים.",
         },
+
+        // 7) צבוע
         {
           mainAnimal: {
             name: "צבוע",
             image: "images/hyena.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "טורפים",
+              Family: "צבועיים", // (Hyaenidae)
+              Genus: "צבוע נקוד", // (Crocuta/Hyaena) – כאן פשוט "צבוע"
+              Species: "צבוע נקוד", // (Crocuta crocuta)
+            },
           },
           options: [
-            { name: "תן", image: "images/jackal.jpg" },
+            {
+              name: "תן",
+              image: "images/jackal.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים",
+                Family: "כלביים", // (Canidae)
+                Genus: "כלב", // (Canis)
+                Species: "תן זהוב", // (Canis aureus)
+              },
+            },
             {
               name: "נמייה ננסית",
               image: "images/mongoose.jpg",
               correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים",
+                Family: "נמייתיים", // (Herpestidae)
+                Genus: "נמייה ננסית", // (Helogale)
+                Species: "נמייה ננסית מצויה", // (Helogale parvula)
+              },
             },
-            { name: "גירית דבש", image: "images/honeybadger.jpg" },
+            {
+              name: "גירית דבש",
+              image: "images/honeybadger.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "טורפים",
+                Family: "סמוריים", // (Mustelidae)
+                Genus: "גיריות דבש", // (Mellivora)
+                Species: "גירית הדבש", // (Mellivora capensis)
+              },
+            },
           ],
-          explanation: "נמייה נסית קרובה יותר לצב מאשר לגירית דבש או תן.",
+          explanation:
+            "נמייה ננסית קרובה יותר לצבוע מאשר לגירית דבש או תן מבחינה אבולוציונית.",
         },
+
+        // 8) חדף פיל
         {
           mainAnimal: {
             name: "חדף פיל",
             image: "images/shrew.jpg",
+            taxonomy: {
+              Kingdom: "בעלי חיים",
+              Phylum: "מיתרניים",
+              Class: "יונקים",
+              Order: "חדפי פיל", // (Macroscelidea)
+              Family: "חדפי פיל", // (Macroscelididae)
+              Genus: "ארכף גדול", // (Elephantulus/Petrodromus) - כאן נשאר בעברית פשוטה
+              Species: "ארכף אדום-ראש", // למשל Elephantulus rozeti
+            },
           },
           options: [
-            { name: "פיל", image: "images/elephant.jpg", correct: true },
-            { name: "אוגר", image: "images/hamster.jpg" },
-            { name: "עכבר", image: "images/mouse.jpg" },
+            {
+              name: "פיל",
+              image: "images/elephant.jpg",
+              correct: true,
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "חדקאים", // (Proboscidea)
+                Family: "פיליים", // (Elephantidae)
+                Genus: "פיל", // (Elephas)
+                Species: "פיל אסייתי", // (Elephas maximus)
+              },
+            },
+            {
+              name: "אוגר",
+              image: "images/hamster.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מכרסמים", // (Rodentia)
+                Family: "אוגריים", // (Cricetidae)
+                Genus: "אוגר",
+                Species: "אוגר סורי", // (Mesocricetus auratus) כדוגמה
+              },
+            },
+            {
+              name: "עכבר",
+              image: "images/mouse.jpg",
+              taxonomy: {
+                Kingdom: "בעלי חיים",
+                Phylum: "מיתרניים",
+                Class: "יונקים",
+                Order: "מכרסמים",
+                Family: "עכבריים", // (Muridae)
+                Genus: "עכבר",
+                Species: "עכבר מצוי", // (Mus musculus)
+              },
+            },
           ],
-          explanation: "חדר פיל נקשר לפיל בצורה ישירה יותר מאשר לעכבר או אוגר.",
+          explanation:
+            "חדף פיל (Elephant Shrew) קרוב יותר לפיל מאשר לעכבר או אוגר מבחינה אבולוציונית, שכן הוא נמנה על קבוצת האפרותריה.",
         },
       ];
 
       let currentQuestion = 0;
       let scores = { a: 0, b: 0 };
       let selections = { a: null, b: null };
+
+      // Initialize mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#4F46E5",
+          primaryTextColor: "#fff",
+          primaryBorderColor: "#4F46E5",
+          lineColor: "#94A3B8",
+          secondaryColor: "#6366F1",
+          tertiaryColor: "#818CF8",
+        },
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+          curve: "basis",
+          rankSpacing: 80,
+          nodeSpacing: 50,
+          padding: 20,
+        },
+      });
+
+      // Function to generate enhanced taxonomy diagram
+      function generateTaxonomyDiagram(mainAnimal, options) {
+        // Start a left-to-right flowchart
+        let diagram = "graph LR\n";
+
+        // Define your custom classes with enhanced styling
+        diagram += `
+%% === Classes (Styling) ===
+classDef kingdomStyle fill:#4F46E5,stroke:#4F46E5,color:#fff,stroke-width:2px;
+classDef phylumStyle fill:#6366F1,stroke:#6366F1,color:#fff,stroke-width:2px;
+classDef classStyle fill:#818CF8,stroke:#818CF8,color:#fff,stroke-width:2px;
+classDef orderStyle fill:#A5B4FC,stroke:#A5B4FC,color:#1E293B,stroke-width:2px;
+classDef familyStyle fill:#C7D2FE,stroke:#C7D2FE,color:#1E293B,stroke-width:2px;
+classDef genusStyle fill:#E0E7FF,stroke:#E0E7FF,color:#1E293B,stroke-width:2px;
+classDef speciesStyle fill:#FF6B6B,stroke:#FF6B6B,color:#1E293B,stroke-width:2px;
+classDef sharedStyle fill:#22C55E,stroke:#22C55E,color:#fff,stroke-width:3px;
+classDef mainAnimalStyle stroke:#121157,color:#fff,stroke-width:3px;
+classDef correctAnswerStyle fill:#4CAF50,stroke:#227025,color:#fff,stroke-width:3px;
+`;
+
+        const taxonomyLevels = [
+          { key: "Kingdom", hebrew: "ממלכה", style: "kingdomStyle" },
+          { key: "Phylum", hebrew: "מערכה", style: "phylumStyle" },
+          { key: "Class", hebrew: "מחלקה", style: "classStyle" },
+          { key: "Order", hebrew: "סדרה", style: "orderStyle" },
+          { key: "Family", hebrew: "משפחה", style: "familyStyle" },
+          { key: "Genus", hebrew: "סוג", style: "genusStyle" },
+          { key: "Species", hebrew: "מין", style: "speciesStyle" },
+        ];
+
+        // Main animal path
+        const mainPrefix = "main";
+        taxonomyLevels.forEach((level, i) => {
+          const labelValue =
+            level.key === "Species"
+              ? mainAnimal.name
+              : mainAnimal.taxonomy[level.key];
+
+          // Add special styling for main animal's species
+          if (level.key === "Species") {
+            diagram += `${mainPrefix}${level.key}["🔍 <b>${level.hebrew}</b><br>${labelValue}"]:::mainAnimalStyle\n`;
+          } else {
+            diagram += `${mainPrefix}${level.key}["<b>${level.hebrew}</b><br>${labelValue}"]:::${level.style}\n`;
+          }
+
+          if (i > 0) {
+            diagram += `${mainPrefix}${
+              taxonomyLevels[i - 1].key
+            } --> ${mainPrefix}${level.key}\n`;
+          }
+        });
+
+        // Option paths
+        options.forEach((option, index) => {
+          const prefix = `opt${index}`;
+          let lastSharedIndex = 0;
+
+          // Find last shared taxonomy level
+          taxonomyLevels.forEach((level, i) => {
+            const mainValue =
+              level.key === "Species"
+                ? mainAnimal.name
+                : mainAnimal.taxonomy[level.key];
+            const optValue =
+              level.key === "Species"
+                ? option.name
+                : option.taxonomy[level.key];
+            if (optValue === mainValue) lastSharedIndex = i;
+          });
+
+          // Build option paths
+          taxonomyLevels.forEach((level, i) => {
+            const optValue = option.taxonomy[level.key];
+
+            if (i <= lastSharedIndex) {
+              diagram += `class ${mainPrefix}${level.key} sharedStyle;\n`;
+            } else {
+              // Add special styling for correct answer's species
+              if (level.key === "Species" && option.correct) {
+                diagram += `${prefix}${level.key}["✅ <b>${level.hebrew}</b><br>${optValue}"]:::correctAnswerStyle\n`;
+              } else {
+                diagram += `${prefix}${level.key}["<b>${level.hebrew}</b><br>${optValue}"]:::${level.style}\n`;
+              }
+
+              if (i === lastSharedIndex + 1) {
+                diagram += `${mainPrefix}${taxonomyLevels[lastSharedIndex].key} --> ${prefix}${level.key}\n`;
+              } else {
+                diagram += `${prefix}${
+                  taxonomyLevels[i - 1].key
+                } --> ${prefix}${level.key}\n`;
+              }
+            }
+          });
+        });
+
+        return diagram;
+      }
 
       const updateUI = () => {
         const question = quizData[currentQuestion];
@@ -515,7 +1097,6 @@
 
         // Hide explanation section
         document.getElementById("explanation-container").style.display = "none";
-        document.getElementById("explanation-text").textContent = "";
       };
 
       /**
@@ -589,6 +1170,7 @@
         document.getElementById("reveal-btn").disabled =
           selections.a === null || selections.b === null;
       };
+
       const revealAnswer = () => {
         const question = quizData[currentQuestion];
         const options = document.querySelectorAll(".option");
@@ -611,14 +1193,26 @@
         document.getElementById("score-b").textContent = scores.b;
 
         // Display explanation
-        const explanationText = question.explanation || "";
-        const explanationContainer = document.getElementById(
-          "explanation-container"
+        const diagram = generateTaxonomyDiagram(
+          question.mainAnimal,
+          question.options
         );
-        const explanationParagraph =
-          document.getElementById("explanation-text");
-        explanationParagraph.textContent = explanationText;
-        explanationContainer.style.display = "block";
+        const diagramContainer = document.getElementById("taxonomy-diagram");
+        diagramContainer.innerHTML = `<pre class="mermaid">${diagram}</pre>`;
+        mermaid.init(undefined, diagramContainer.querySelector(".mermaid"));
+
+        // Also prepare the fullscreen diagram
+        const fullscreenDiagramContainer = document.getElementById(
+          "fullscreen-taxonomy-diagram"
+        );
+        fullscreenDiagramContainer.innerHTML = `<pre class="mermaid">${diagram}</pre>`;
+        mermaid.init(
+          undefined,
+          fullscreenDiagramContainer.querySelector(".mermaid")
+        );
+
+        document.getElementById("explanation-container").style.display =
+          "block";
 
         document.getElementById("reveal-btn").disabled = true;
         document.getElementById("next-btn").disabled = false;
@@ -716,6 +1310,54 @@
       document
         .getElementById("finish-btn")
         .addEventListener("click", finishQuiz);
+
+      // Modal Functionality
+      const modal = document.getElementById("diagram-modal");
+      const openModalBtn = document.getElementById("view-fullscreen-btn");
+      const closeModalSpan = document.getElementsByClassName("close-modal")[0];
+
+      // When the user clicks the button, open the modal
+      openModalBtn.addEventListener("click", () => {
+        modal.style.display = "flex"; // Show the modal
+
+        // Ensure Mermaid renders the diagram after the modal is visible
+        const fullscreenDiagramContainer = document.getElementById(
+          "fullscreen-taxonomy-diagram"
+        );
+
+        // Clear any existing content to avoid duplication
+        fullscreenDiagramContainer.innerHTML = "";
+
+        // Regenerate the diagram content
+        const question = quizData[currentQuestion];
+        const diagram = generateTaxonomyDiagram(
+          question.mainAnimal,
+          question.options
+        );
+
+        // Add the Mermaid content to the modal
+        fullscreenDiagramContainer.innerHTML = `<pre class="mermaid">${diagram}</pre>`;
+
+        // Allow the browser to render and calculate dimensions
+        setTimeout(() => {
+          mermaid.init(
+            undefined,
+            fullscreenDiagramContainer.querySelectorAll(".mermaid")
+          );
+        }, 100);
+      });
+
+      // When the user clicks on <span> (x), close the modal
+      closeModalSpan.onclick = function () {
+        modal.style.display = "none";
+      };
+
+      // When the user clicks anywhere outside of the modal content, close it
+      window.onclick = function (event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
 
       updateUI();
     </script>

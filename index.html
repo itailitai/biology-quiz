@@ -1264,6 +1264,65 @@
         },
       ];
 
+      const preloadAssets = (quizData) => {
+        // Preload images
+        const images = [];
+        quizData.forEach((question) => {
+          // Main animal image
+          const mainAnimalImg = new Image();
+          mainAnimalImg.src = question.mainAnimal.image;
+          images.push(mainAnimalImg);
+
+          // Option images
+          question.options.forEach((option) => {
+            const optionImg = new Image();
+            optionImg.src = option.image;
+            images.push(optionImg);
+          });
+        });
+
+        // Preload audio files
+        const audioFiles = [
+          "sounds/next.mp3",
+          "sounds/select.mp3",
+          "sounds/success.mp3",
+          "sounds/fail.mp3",
+          "sounds/applause.mp3",
+        ];
+        const audioElements = audioFiles.map((src) => {
+          const audio = new Audio(src);
+          return audio;
+        });
+
+        // Notify when preloading is complete
+        Promise.all(
+          images.map(
+            (img) =>
+              new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve; // Handle errors gracefully
+              })
+          )
+        ).then(() => {
+          console.log("All images preloaded.");
+        });
+
+        Promise.all(
+          audioElements.map(
+            (audio) =>
+              new Promise((resolve) => {
+                audio.oncanplaythrough = resolve;
+                audio.onerror = resolve; // Handle errors gracefully
+              })
+          )
+        ).then(() => {
+          console.log("All audio preloaded.");
+        });
+      };
+
+      // Call preloadAssets before the quiz starts
+      preloadAssets(quizData);
+
       let currentQuestion = 0;
       let scores = { a: 0, b: 0 };
       let selections = { a: null, b: null };
